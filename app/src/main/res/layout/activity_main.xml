@@ -1,183 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
     <GridLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-       >
-    <EditText
-        android:id="@+id/msgInput"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello world"
-        android:inputType="text"
-        android:layout_row="2"
-        android:layout_column="1"
-        android:layout_columnSpan="2"/>
+        android:gravity="center"
+        android:rowCount="5"
+        android:columnCount="3"
+        android:layout_margin="8dp">
 
-
-        <EditText
-            android:id="@+id/statusText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="3"
-            android:layout_column="1"
-            android:layout_columnSpan="2"
-            android:inputType="text"
-            android:text="N.A." />
-
+        <!-- 顶部按钮 -->
         <Button
-            android:id="@+id/sendBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="4"
-            android:layout_column="1"
-            android:text="Send" />
-
-        <Button
-            android:id="@+id/connectBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="4"
-            android:layout_column="0"
-            android:text="Connect" />
-
-        <Button
-            android:id="@+id/disconnectBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="4"
-            android:layout_column="2"
-            android:text="Disconnect" />
-
-        <Spinner
-            android:id="@+id/btSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/batBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_row="0"
-            android:layout_rowSpan="2"
-            android:layout_column="0"
-            android:layout_columnSpan="3"
-            android:visibility="visible" />
-
-        <Button
-            android:id="@+id/P3Btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="5"
             android:layout_column="1"
-            android:text="P3" />
-        <Button
-            android:id="@+id/P2Btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="6"
-            android:layout_column="1"
-            android:text="P2" />
+            android:text="\?"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
         <Button
             android:id="@+id/P1Btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="7"
-            android:layout_column="1"
-            android:text="P1" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:text="P1"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
         <Button
-            android:id="@+id/P0Btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="8"
-            android:layout_column="1"
-            android:text="P0" />
-        <Button
-            android:id="@+id/stopBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="8"
-            android:layout_column="1"
-            android:text="S" />
-        <Button
-            android:id="@+id/NBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="9"
-            android:layout_column="1"
-            android:text="N" />
-
+            android:id="@+id/P2Btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="0"
+            android:layout_column="2"
+            android:text="P2"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
+        <!-- 中间行按钮 -->
         <Button
             android:id="@+id/LBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="8"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="1"
             android:layout_column="0"
-            android:text="L" />
+            android:text="L"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
+
+        <Button
+            android:id="@+id/stopBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:text="S"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
 
         <Button
             android:id="@+id/RBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="8"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="1"
             android:layout_column="2"
-            android:text="R" />
+            android:text="R"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
 
+        <!-- 底部行按钮 -->
         <Button
             android:id="@+id/TLBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="10"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="2"
             android:layout_column="0"
-            android:text="MG" />
+            android:text="MG"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
+
+        <Button
+            android:id="@+id/NBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="2"
+            android:layout_column="1"
+            android:text="N"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
 
         <Button
             android:id="@+id/TRBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="10"
-            android:layout_column="2"
-            android:text="MU" />
-        <Button
-            android:id="@+id/CamBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="3"
-            android:layout_column="0"
-            android:text="Camera" />
-        <WebView
-            android:id="@+id/webview"
-            android:layout_row="13"
-            android:layout_column="0"
-            android:layout_width="320dp"
-            android:layout_height="240dp"
-            android:layout_columnSpan="3"
-           />
-
-        <Button
-            android:id="@+id/TMBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="10"
-            android:layout_column="1"
-            android:text="Main" />
-
-        <Button
-            android:id="@+id/batBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_row="5"
-            android:layout_column="0"
-            android:text="BAT" />
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_row="2"
+            android:layout_column="2"
+            android:text="MU"
+            android:textSize="12sp"
+            android:layout_margin="4dp"/>
+        <Spinner
+            android:id="@+id/btSpinner"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:layout_row="3"
+            android:layout_rowSpan="1"
             android:layout_column="0"
-            android:text="message" />
-
+            android:layout_columnSpan="2"
+            android:textSize="12sp"
+            android:layout_margin="4dp"
+            android:visibility="visible" />
+        <Button
+            android:id="@+id/connectBtn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_row="3"
+            android:layout_column="2"
+            android:textSize="12sp"
+            android:layout_margin="4dp"
+            android:text="Con" />
     </GridLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

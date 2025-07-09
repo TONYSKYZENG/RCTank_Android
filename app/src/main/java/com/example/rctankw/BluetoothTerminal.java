@@ -1,4 +1,4 @@
-package com.example.rctank;
+package com.example.rctankw;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;

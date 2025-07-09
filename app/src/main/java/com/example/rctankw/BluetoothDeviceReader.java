@@ -1,4 +1,4 @@
-package com.example.rctank;
+package com.example.rctankw;
 
 import android.Manifest;
 import android.app.Activity;
@@ -34,25 +34,25 @@ public class BluetoothDeviceReader {
         this.bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
     }
 
-    public void populateConnectedDevicesToSpinner(Spinner spinner) {
+    public void populateConnectedDevicesToSpinner(/*Spinner spinner*/) {
         // 检查权限
         if (!checkBluetoothPermissions()) {
             requestBluetoothPermissions();
             deviceNames.add("需要蓝牙权限");
-            setupSpinnerAdapter(spinner);
+            //setupSpinnerAdapter(spinner);
             return;
         }
 
         // 检查蓝牙是否可用和启用
         if (bluetoothAdapter == null) {
             deviceNames.add("设备不支持蓝牙");
-            setupSpinnerAdapter(spinner);
+          //  setupSpinnerAdapter(spinner);
             return;
         }
 
         if (!bluetoothAdapter.isEnabled()) {
             deviceNames.add("蓝牙未启用");
-            setupSpinnerAdapter(spinner);
+           // setupSpinnerAdapter(spinner);
             return;
         }
 
@@ -69,7 +69,7 @@ public class BluetoothDeviceReader {
             }
         }
 
-        setupSpinnerAdapter(spinner);
+       // setupSpinnerAdapter(spinner);
     }
 
     private boolean checkBluetoothPermissions() {
@@ -111,6 +111,6 @@ public class BluetoothDeviceReader {
 
     public void refreshDeviceList(Spinner spinner) {
         deviceNames.clear();
-        populateConnectedDevicesToSpinner(spinner);
+        populateConnectedDevicesToSpinner();
     }
 }
