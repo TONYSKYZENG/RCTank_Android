@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BT_RCTank</string>
+    <string-array name="mode_items">
+            <item>BT</item>
+            <item>WIFI</item>
+    </string-array>
+</resources>
