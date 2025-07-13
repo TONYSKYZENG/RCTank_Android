@@ -5,8 +5,12 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -20,18 +24,25 @@ import java.util.Set;
 
 public class BluetoothDeviceReader {
 
-    public static final int REQUEST_BLUETOOTH_PERMISSIONS =1 ;
-   // private static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
+    public static final int REQUEST_BLUETOOTH_PERMISSIONS = 1;
+    private static final long SCAN_PERIOD = 5000; // BLE扫描时间10秒
 
     private final Context context;
     private final BluetoothAdapter bluetoothAdapter;
+    private BluetoothLeScanner bleScanner;
     private final List<String> deviceNames = new ArrayList<>();
+    private final List<BluetoothDevice> devices = new ArrayList<>();
     private ArrayAdapter<String> spinnerAdapter;
+    private boolean isScanning = false;
+    private final Handler handler = new Handler();
 
     public BluetoothDeviceReader(Context context) {
         this.context = context;
         BluetoothManager bluetoothManager = context.getSystemService(BluetoothManager.class);
         this.bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
+        if (bluetoothAdapter != null) {
+            this.bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+        }
     }
 
     public void populateConnectedDevicesToSpinner(Spinner spinner) {
@@ -56,24 +67,82 @@ public class BluetoothDeviceReader {
             return;
         }
 
-        // 获取已配对设备
+        // 清空设备列表
+        deviceNames.clear();
+        devices.clear();
+
+        // 获取已配对设备(经典蓝牙)
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
 
-        if (pairedDevices.isEmpty()) {
-            deviceNames.add("没有已配对的设备");
-        } else {
-            deviceNames.clear();
+        if (!pairedDevices.isEmpty()) {
             for (BluetoothDevice device : pairedDevices) {
-                String deviceName = device.getName();
-                deviceNames.add(deviceName != null ? deviceName : "未知设备");
+                addDeviceToList(device);
             }
         }
 
-        setupSpinnerAdapter(spinner);
+        // 开始BLE扫描
+        scanLeDevices(spinner);
     }
 
+    private void addDeviceToList(BluetoothDevice device) {
+        if (!containsDevice(device)) {
+            devices.add(device);
+            String deviceName = device.getName();
+            deviceNames.add((deviceName != null ? deviceName : "未知设备") +
+                    (device.getType() == BluetoothDevice.DEVICE_TYPE_LE ? " (BLE)" : ""));
+        }
+    }
+
+    private boolean containsDevice(BluetoothDevice newDevice) {
+        for (BluetoothDevice device : devices) {
+            if (device.getAddress().equals(newDevice.getAddress())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void scanLeDevices(final Spinner spinner) {
+        if (bleScanner == null || isScanning) {
+            setupSpinnerAdapter(spinner);
+            return;
+        }
+
+        handler.postDelayed(() -> {
+            if (isScanning) {
+                isScanning = false;
+                if (bleScanner != null) {
+                    bleScanner.stopScan(leScanCallback);
+                }
+                setupSpinnerAdapter(spinner);
+            }
+        }, SCAN_PERIOD);
+
+        isScanning = true;
+        bleScanner.startScan(leScanCallback);
+    }
+
+    private final ScanCallback leScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice device = result.getDevice();
+            addDeviceToList(device);
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            isScanning = false;
+            if (deviceNames.isEmpty()) {
+                deviceNames.add("BLE扫描失败");
+            }
+        }
+    };
+
     private boolean checkBluetoothPermissions() {
-        return ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestBluetoothPermissions() {
@@ -82,7 +151,8 @@ public class BluetoothDeviceReader {
                     (Activity) context,
                     new String[]{
                             Manifest.permission.BLUETOOTH_CONNECT,
-                            Manifest.permission.BLUETOOTH_SCAN
+                            Manifest.permission.BLUETOOTH_SCAN,
+                            Manifest.permission.ACCESS_FINE_LOCATION
                     },
                     REQUEST_BLUETOOTH_PERMISSIONS
             );
@@ -100,6 +170,10 @@ public class BluetoothDeviceReader {
     }
 
     private void setupSpinnerAdapter(Spinner spinner) {
+        if (deviceNames.isEmpty()) {
+            deviceNames.add("没有找到设备");
+        }
+
         spinnerAdapter = new ArrayAdapter<>(
                 context,
                 android.R.layout.simple_spinner_item,
@@ -111,6 +185,14 @@ public class BluetoothDeviceReader {
 
     public void refreshDeviceList(Spinner spinner) {
         deviceNames.clear();
+        devices.clear();
         populateConnectedDevicesToSpinner(spinner);
+    }
+
+    public BluetoothDevice getDeviceAtPosition(int position) {
+        if (position >= 0 && position < devices.size()) {
+            return devices.get(position);
+        }
+        return null;
     }
 }

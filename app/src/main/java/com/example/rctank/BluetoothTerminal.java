@@ -1,6 +1,13 @@
 package com.example.rctank;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,14 +25,23 @@ import java.util.UUID;
 public class BluetoothTerminal {
     private static final String TAG = "BluetoothTerminal";
     private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    // 常用的BLE服务和特征UUID
+// UUID定义 (使用ESP-IDF BLE SPP默认UUID)
+    private static final UUID BLE_SPP_SERVICE_UUID = UUID.fromString("0000abf0-0000-1000-8000-00805f9b34fb");
+    private static final UUID BLE_SPP_CHARACTERISTIC_UUID = UUID.fromString("0000abf1-0000-1000-8000-00805f9b34fb");
+
+
 
     private final Context context;
     private final BluetoothAdapter bluetoothAdapter;
     private final Handler mainHandler;
-    private BluetoothSocket socket;
+    private BluetoothSocket classicSocket;
+    private BluetoothGatt bleGatt;
+    private BluetoothGattCharacteristic bleCharacteristic;
     private BluetoothDevice targetDevice;
     private ConnectedThread connectedThread;
     private String targetDeviceName;
+    private boolean isBleDevice = false;
 
     // 定义回调接口
     public interface BluetoothConnectionListener {
@@ -64,6 +80,76 @@ public class BluetoothTerminal {
         }
     };
 
+    // BLE GATT回调
+    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            super.onConnectionStateChange(gatt, status, newState);
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                gatt.discoverServices();
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                notifyDisconnected();
+                closeBleConnection();
+            }
+        }
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                // 查找BLE SPP服务
+                BluetoothGattService sppService = gatt.getService(BLE_SPP_SERVICE_UUID);
+                if (sppService != null) {
+                    // 查找读写特征
+                    bleCharacteristic = sppService.getCharacteristic(BLE_SPP_CHARACTERISTIC_UUID);
+                    if (bleCharacteristic != null) {
+                        // 启用通知
+                        gatt.setCharacteristicNotification(bleCharacteristic, true);
+
+                        // 获取并设置客户端特征配置描述符
+                        BluetoothGattDescriptor descriptor = bleCharacteristic.getDescriptor(
+                                UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+                        if (descriptor != null) {
+                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                            gatt.writeDescriptor(descriptor);
+                        } else {
+                            Log.w(TAG, "Client Characteristic Configuration descriptor not found");
+                            // 即使没有描述符也继续连接，某些设备可能不需要
+                            notifyConnected();
+                        }
+                    } else {
+                        notifyConnectionFailed("BLE SPP characteristic not found");
+                    }
+                } else {
+                    notifyConnectionFailed("BLE SPP service not found");
+                }
+            } else {
+                notifyConnectionFailed("Service discovery failed: " + status);
+            }
+        }
+
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicChanged(gatt, characteristic);
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                String message = new String(data);
+                notifyMessageReceived(message);
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                String message = new String(characteristic.getValue());
+                notifyMessageSent(message);
+            } else {
+                notifyError("Failed to send BLE message");
+            }
+        }
+    };
+
     public BluetoothTerminal(Context context) {
         this.context = context;
         this.bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -79,8 +165,11 @@ public class BluetoothTerminal {
     }
 
     public void connectToDeviceByName(String deviceName) {
-        this.targetDeviceName = deviceName;
+        // 移除可能的"(BLE)"后缀得到原始设备名
+        String originalDeviceName = deviceName.replace(" (BLE)", "");
+        this.targetDeviceName = originalDeviceName;  // 存储原始设备名
         this.targetDevice = null;
+        this.isBleDevice = deviceName.contains("(BLE)"); // 根据传入的名称判断是否为BLE设备
 
         if (bluetoothAdapter == null) {
             notifyConnectionFailed("Bluetooth not supported");
@@ -94,7 +183,8 @@ public class BluetoothTerminal {
 
         // 检查已配对设备
         for (BluetoothDevice device : bluetoothAdapter.getBondedDevices()) {
-            if (deviceName.equals(device.getName())) {
+            String name = device.getName();
+            if (name != null && name.equals(originalDeviceName)) {
                 targetDevice = device;
                 break;
             }
@@ -137,50 +227,97 @@ public class BluetoothTerminal {
             return;
         }
 
+        if (isBleDevice) {
+            connectToBleDevice();
+        } else {
+            connectToClassicDevice();
+        }
+    }
+
+    private void connectToClassicDevice() {
         new Thread(() -> {
             try {
-                socket = targetDevice.createRfcommSocketToServiceRecord(SPP_UUID);
-                socket.connect();
+                classicSocket = targetDevice.createRfcommSocketToServiceRecord(SPP_UUID);
+                classicSocket.connect();
 
-                connectedThread = new ConnectedThread(socket);
+                connectedThread = new ConnectedThread(classicSocket);
                 connectedThread.start();
 
                 notifyConnected();
             } catch (IOException e) {
-                Log.e(TAG, "Connection failed", e);
-                closeSocket();
+                Log.e(TAG, "Classic connection failed", e);
+                closeClassicConnection();
                 notifyConnectionFailed(e.getMessage());
             }
         }).start();
     }
 
+    private void connectToBleDevice() {
+        mainHandler.post(() -> {
+            bleGatt = targetDevice.connectGatt(context, false, gattCallback);
+        });
+    }
+
     public void disconnect() {
-        if (connectedThread != null) {
-            connectedThread.cancel();
-            connectedThread = null;
+        if (isBleDevice) {
+            closeBleConnection();
+        } else {
+            if (connectedThread != null) {
+                connectedThread.cancel();
+                connectedThread = null;
+            }
+            closeClassicConnection();
         }
-        closeSocket();
         notifyDisconnected();
     }
 
-    private void closeSocket() {
+    private void closeClassicConnection() {
         try {
-            if (socket != null) {
-                socket.close();
-                socket = null;
+            if (classicSocket != null) {
+                classicSocket.close();
+                classicSocket = null;
             }
         } catch (IOException e) {
-            Log.e(TAG, "Could not close the client socket", e);
+            Log.e(TAG, "Could not close the classic socket", e);
+        }
+    }
+
+    private void closeBleConnection() {
+        if (bleGatt != null) {
+            bleGatt.disconnect();
+            bleGatt.close();
+            bleGatt = null;
+            bleCharacteristic = null;
         }
     }
 
     public void sendMessage(String message) {
+        if (isBleDevice) {
+            sendBleMessage(message);
+        } else {
+            sendClassicMessage(message);
+        }
+    }
+
+    private void sendClassicMessage(String message) {
         if (connectedThread != null) {
             connectedThread.write(message.getBytes());
             notifyMessageSent(message);
         } else {
-            notifyError("Not connected to any device");
+            notifyError("Not connected to any classic device");
         }
+    }
+
+    private void sendBleMessage(String message) {
+        if (bleGatt == null || bleCharacteristic == null) {
+            notifyError("Not connected to any BLE device");
+            return;
+        }
+
+        mainHandler.post(() -> {
+            bleCharacteristic.setValue(message.getBytes());
+            bleGatt.writeCharacteristic(bleCharacteristic);
+        });
     }
 
     private void notifyConnected() {
