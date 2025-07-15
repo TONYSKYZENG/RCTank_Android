@@ -34,7 +34,7 @@ public class BluetoothDeviceReader {
         this.bluetoothAdapter = bluetoothManager != null ? bluetoothManager.getAdapter() : null;
     }
 
-    public void populateConnectedDevicesToSpinner(/*Spinner spinner*/) {
+    public void populateConnectedDevicesToSpinner(Spinner spinner) {
         // 检查权限
         if (!checkBluetoothPermissions()) {
             requestBluetoothPermissions();
@@ -69,7 +69,7 @@ public class BluetoothDeviceReader {
             }
         }
 
-       // setupSpinnerAdapter(spinner);
+       setupSpinnerAdapter(spinner);
     }
 
     private boolean checkBluetoothPermissions() {
@@ -111,6 +111,6 @@ public class BluetoothDeviceReader {
 
     public void refreshDeviceList(Spinner spinner) {
         deviceNames.clear();
-        populateConnectedDevicesToSpinner();
+        populateConnectedDevicesToSpinner(spinner);
     }
 }

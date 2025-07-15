@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
     private BluetoothTerminal bluetoothTerminal;
     private Button sendBtn,connectBtn,disConnectBtn;
     private Spinner btSpinner;
+    private EditText msgInput;
     private Button P3Btn,P2Btn,P1Btn,SBtn,NBtn,LBtn,RBtn,CamBtn,TRBtn,TLBtn,TMBtn,batBtn;
     private BluetoothScanner bluetoothScanner;
     @Override
@@ -38,7 +40,9 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
         TLBtn = findViewById(R.id.TLBtn);
         batBtn = findViewById(R.id.batBtn);
         btSpinner = findViewById(R.id.btSpinner);
-
+        sendBtn  = findViewById(R.id.sendBtn);
+        msgInput = findViewById(R.id.msgInput);
+        deviceReader = new BluetoothDeviceReader(this);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
@@ -54,7 +58,7 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
             bluetoothTerminal = new BluetoothTerminal(this);
            bluetoothTerminal.setConnectionListener(this);
             bluetoothTerminal.setMessageListener(this);
-           //deviceReader.populateConnectedDevicesToSpinner();
+           deviceReader.populateConnectedDevicesToSpinner(btSpinner);
             // 设置设备列
         }
         bluetoothScanner = new BluetoothScanner(this, btSpinner);
@@ -68,7 +72,7 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
                 String port = portInput.getText().toString();
                 client.connectToServer(ip,port);
                  */
-                String deviceName = "ESP_M1A2";
+               String deviceName = (String) btSpinner.getSelectedItem();
                 bluetoothTerminal.connectToDeviceByName(deviceName);
             }
         });
@@ -137,6 +141,15 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
                 bluetoothTerminal.sendMessage(message);
             }
         });
+        sendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String message = msgInput.getText().toString();
+                bluetoothTerminal.sendMessage(message);
+                //bluetoothTerminal.sendMessage(message);
+            }
+        });
+
 
        /* TextView textView = findViewById(R.id.);
         textView.setText("Hi, Pixel Watch 2!");*/
