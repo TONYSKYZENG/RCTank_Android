@@ -21,7 +21,7 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
     private Button sendBtn,connectBtn,disConnectBtn;
     private Spinner btSpinner;
     private EditText msgInput;
-    private Button P3Btn,P2Btn,P1Btn,SBtn,NBtn,LBtn,RBtn,CamBtn,TRBtn,TLBtn,TMBtn,batBtn;
+    private Button P3Btn,P2Btn,P1Btn,SBtn,NBtn,LBtn,RBtn,CamBtn,TRBtn,TLBtn,TMBtn,batBtn,exitBtn;
     private BluetoothScanner bluetoothScanner;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +42,7 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
         btSpinner = findViewById(R.id.btSpinner);
         sendBtn  = findViewById(R.id.sendBtn);
         msgInput = findViewById(R.id.msgInput);
+        exitBtn = findViewById(R.id.exitBtn);
         deviceReader = new BluetoothDeviceReader(this);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -61,8 +62,8 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
            deviceReader.populateConnectedDevicesToSpinner(btSpinner);
             // 设置设备列
         }
-        bluetoothScanner = new BluetoothScanner(this, btSpinner);
-        bluetoothScanner.checkPermissionsAndStartScan();
+       // bluetoothScanner = new BluetoothScanner(this, btSpinner);
+       // bluetoothScanner.checkPermissionsAndStartScan();
         connectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,6 +148,13 @@ public class MainActivity extends Activity implements BluetoothTerminal.Bluetoot
                 String message = msgInput.getText().toString();
                 bluetoothTerminal.sendMessage(message);
                 //bluetoothTerminal.sendMessage(message);
+            }
+        });
+        exitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bluetoothTerminal.disconnect();
+                finishAffinity();
             }
         });
 
