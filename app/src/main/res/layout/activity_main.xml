@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<HorizontalScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:scrollbars="horizontal">
+<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent">
     <GridLayout
         android:layout_width="match_parent"
@@ -32,16 +37,18 @@
             android:text="P1"
             android:textSize="12sp"
             android:layout_margin="4dp"/>
+
+        <!-- 中间行按钮 -->
         <Button
             android:id="@+id/P2Btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_row="0"
             android:layout_column="2"
+            android:layout_margin="4dp"
             android:text="P2"
-            android:textSize="12sp"
-            android:layout_margin="4dp"/>
-        <!-- 中间行按钮 -->
+            android:textSize="12sp" />
+
         <Button
             android:id="@+id/LBtn"
             android:layout_width="40dp"
@@ -102,26 +109,28 @@
             android:layout_margin="4dp"
             android:text="MG"
             android:textSize="12sp" />
+
         <Spinner
             android:id="@+id/btSpinner"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:layout_row="3"
             android:layout_rowSpan="1"
-            android:layout_column="0"
+            android:layout_column="1"
             android:layout_columnSpan="2"
-            android:textSize="12sp"
             android:layout_margin="4dp"
+            android:textSize="12sp"
             android:visibility="visible" />
+
         <Button
             android:id="@+id/connectBtn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_row="3"
-            android:layout_column="2"
-            android:textSize="12sp"
+            android:layout_column="3"
             android:layout_margin="4dp"
-            android:text="Con" />
+            android:text="Con"
+            android:textSize="12sp" />
 
         <EditText
             android:id="@+id/msgInput"
@@ -131,7 +140,7 @@
             android:layout_column="3"
             android:ems="10"
             android:inputType="text"
-            android:text="Hi" />
+            android:text="Hello" />
         <Button
             android:id="@+id/sendBtn"
             android:layout_width="40dp"
@@ -143,3 +152,4 @@
             android:text="!" />
     </GridLayout>
 </LinearLayout>
+</HorizontalScrollView>
